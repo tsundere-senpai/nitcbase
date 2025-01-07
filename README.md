@@ -1,2 +1,0 @@
-# nitcbase
-RDBMS Lab Project 
