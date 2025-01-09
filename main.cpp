@@ -6,6 +6,31 @@
 #include <cstring>
 using namespace std;
 
+void updateattrName(const char *RelName,const char *OldAttName,const char *NewAttName){
+    
+    RecBuffer attrCatBuffer(ATTRCAT_BLOCK);
+
+    HeadInfo attrCatHeader;
+    attrCatBuffer.getHeader(&attrCatHeader);
+//i=index of the record
+    for(int i=0;i<attrCatHeader.numEntries;i++){
+        Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
+        attrCatBuffer.getRecord(attrCatRecord,i);
+
+        if(strcmp(attrCatRecord[ATTRCAT_REL_NAME_INDEX].sVal,RelName)==0 && strcmp(attrCatRecord[ATTRCAT_ATTR_NAME_INDEX].sVal,OldAttName)==0)
+       {
+              strcpy(attrCatRecord[ATTRCAT_ATTR_NAME_INDEX].sVal,NewAttName);
+              attrCatBuffer.setRecord(attrCatRecord,i);
+              std::cout<<"Update Complete!\n\n";
+              break;
+        }
+        if(i==attrCatHeader.numSlots-1){
+          i=-1;
+          attrCatBuffer=RecBuffer(attrCatHeader.rblock);
+          attrCatBuffer.getHeader(&attrCatHeader);
+        }
+    }
+  }
 int main(int argc, char *argv[])
 {
   Disk disk_run;
@@ -30,7 +55,7 @@ int main(int argc, char *argv[])
 
     printf("Relation: %s\n", relCatRecord[RELCAT_REL_NAME_INDEX].sVal);
 
-    for (int j=0;j<relCatRecord[RELCAT_NO_ATTRIBUTES_INDEX].nVal;j++,attrCatSlotIndex++)
+      for (int j=0;j<relCatRecord[RELCAT_NO_ATTRIBUTES_INDEX].nVal;j++,attrCatSlotIndex++)
     {
 
       // declare attrCatRecord and load the attribute catalog entry into it
@@ -43,9 +68,20 @@ int main(int argc, char *argv[])
         const char *attrType = attrCatRecord[ATTRCAT_ATTR_TYPE_INDEX].nVal == NUMBER ? "NUM" : "STR";
         printf("  %s: %s\n",attrCatRecord[ATTRCAT_ATTR_NAME_INDEX].sVal, attrType);
       }
+      //if attribute is more than one block then we go to the second block after reaching 
+      //the end of the first block
+      //-1 because of 0based indexing
+      if (attrCatSlotIndex==attrCatHeader.numSlots-1)
+      {
+          attrCatSlotIndex=-1;//the for loop will update this thing
+          attrCatBuffer=RecBuffer(attrCatHeader.rblock);
+          attrCatBuffer.getHeader(&attrCatHeader);
+      }
     }
+    updateattrName("Students","Class","Batch");
     printf("\n");
   }
-
+  
+  
   return 0;
 }
