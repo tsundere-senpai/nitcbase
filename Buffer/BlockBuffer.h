@@ -7,7 +7,7 @@
 #include "../define/constants.h"
 #include "StaticBuffer.h"
 
-struct HeadInfo {
+typedef struct HeadInfo {
   int32_t blockType;
   int32_t pblock;
   int32_t lblock;
@@ -16,7 +16,7 @@ struct HeadInfo {
   int32_t numAttrs;
   int32_t numSlots;
   unsigned char reserved[4];
-};
+}HeadInfo;
 
 typedef union Attribute {
   double nVal;
