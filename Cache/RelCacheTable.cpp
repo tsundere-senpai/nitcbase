@@ -16,7 +16,7 @@ int RelCacheTable::getRelCatEntry(int relId, RelCatEntry *relCatBuf)
 
     // if there's no entry at the rel-id
     if (relCache[relId] == nullptr)
-    {
+    {                         
         return E_RELNOTOPEN;
     }
 
@@ -51,15 +51,22 @@ void RelCacheTable::recordToRelCatEntry(union Attribute record[RELCAT_NO_ATTRS],
 }
 
 /* will return the searchIndex for the relation corresponding to `relId
+it returns the searchIndex in the `searchIndex` argument
+return value is SUCCESS if the operation is successful
 NOTE: this function expects the caller to allocate memory for `*searchIndex`
 */
 int RelCacheTable::getSearchIndex(int relId, RecId* searchIndex) {
   // check if 0 <= relId < MAX_OPEN and return E_OUTOFBOUND otherwise
-    
+    if(relId<0 || relId>=MAX_OPEN) {
+        return E_OUTOFBOUND;
+    }
   // check if relCache[relId] == nullptr and return E_RELNOTOPEN if true
-
+    if(relCache[relId]==nullptr) {
+        return E_RELNOTOPEN;
+    }
   // copy the searchIndex field of the Relation Cache entry corresponding
   //   to input relId to the searchIndex variable.
+
   *searchIndex = relCache[relId]->searchIndex;
   return SUCCESS;
 }
@@ -68,14 +75,35 @@ int RelCacheTable::getSearchIndex(int relId, RecId* searchIndex) {
 int RelCacheTable::setSearchIndex(int relId, RecId* searchIndex) {
 
   // check if 0 <= relId < MAX_OPEN and return E_OUTOFBOUND otherwise
-
+    if(relId<0 || relId>=MAX_OPEN) {
+        return E_OUTOFBOUND;
+    }
   // check if relCache[relId] == nullptr and return E_RELNOTOPEN if true
-
+    if(relCache[relId]==nullptr) {
+        return E_RELNOTOPEN;
+    }
   // update the searchIndex value in the relCache for the relId to the searchIndex argument
-
+    relCache[relId]->searchIndex = *searchIndex;
   return SUCCESS;
 }
 
 int RelCacheTable::resetSearchIndex(int relId) {
   // use setSearchIndex to set the search index to {-1, -1}
+    
+    if (relId < 0 || relId >= MAX_OPEN)
+		return E_OUTOFBOUND;
+
+	// check if relCache[relId] == nullptr and return E_RELNOTOPEN if true
+	if (RelCacheTable::relCache[relId] == nullptr)
+		return E_RELNOTOPEN;
+		
+	// use setSearchIndex to set the search index to {-1, -1}
+	RelCacheTable::relCache[relId]->searchIndex = {-1, -1};
+	return SUCCESS;
+    
+//     RecId searchIndex;
+//     searchIndex.block = -1;
+//     searchIndex.slot = -1;
+//     return setSearchIndex(relId, &searchIndex);
+// }
 }

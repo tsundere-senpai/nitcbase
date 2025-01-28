@@ -1,7 +1,7 @@
 #include "Buffer/StaticBuffer.h"
 #include "Cache/OpenRelTable.h"
 #include "Disk_Class/Disk.h"
-// #include "FrontendInterface/FrontendInterface.h"
+#include "FrontendInterface/FrontendInterface.h"
 #include <iostream>
 #include <cstring>
 using namespace std;
@@ -40,18 +40,9 @@ int main(int argc, char *argv[])
   StaticBuffer buffer;
   OpenRelTable cache;
 
-  for (int relId = 0; relId < 2; relId++)
-  {
-    RelCatEntry relCatBuffer;
-    RelCacheTable::getRelCatEntry(relId, &relCatBuffer);
+  return FrontendInterface::handleFrontend(argc, argv);
+  
 
-    cout << "Relation Name: " << relCatBuffer.relName << endl;
-    for (int attrIndex = 0; attrIndex < relCatBuffer.numAttrs; attrIndex++)
-    {
-      AttrCatEntry attrCatBuffer;
-      AttrCacheTable::getAttrCatEntry(relId,attrIndex,&attrCatBuffer);
-      const char *attrType = attrCatBuffer.attrType == NUMBER ? "NUMBER" : "STRING";
-      printf("  %s:%s\n",attrCatBuffer.attrName,attrType);
-    }
-  }
+  
+  
 }

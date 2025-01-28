@@ -23,5 +23,6 @@ class Algebra {
   static int join(char srcRelOne[ATTR_SIZE], char srcRelTwo[ATTR_SIZE], char targetRel[ATTR_SIZE],
                   char attrOne[ATTR_SIZE], char attrTwo[ATTR_SIZE]);
 };
+  bool isNumber(char *str);
 
 #endif  // NITCBASE_ALGEBRA_H
