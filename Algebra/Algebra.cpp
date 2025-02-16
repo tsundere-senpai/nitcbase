@@ -99,7 +99,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE],
             printf("|");
             for (int i = 0; i < blockHead.numAttrs; ++i)
             {
-
+                    
                 AttrCacheTable::getAttrCatEntry(srcRelId, i, &attrCatEntry);
                 if (attrCatEntry.attrType == NUMBER)
                 {

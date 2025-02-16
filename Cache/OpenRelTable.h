@@ -19,7 +19,7 @@ class OpenRelTable {
   OpenRelTable();
   ~OpenRelTable();
   static int getRelId(char relName[ATTR_SIZE]);
-  static int openRel(char relName[ATTR_SIZE]);
+  static int openRel( char relName[ATTR_SIZE]);
   static int closeRel(int relId);
 
  private:

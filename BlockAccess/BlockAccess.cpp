@@ -15,6 +15,7 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE], union Attri
         // get the first block of the relation
         //we use the relCatEntry to get the first block of the relation
         //because the first block of the relation is stored in the relCatEntry
+        
         RelCatEntry relCatEntry;
         RelCacheTable::getRelCatEntry(relId, &relCatEntry);
         block = relCatEntry.firstBlk;
@@ -113,6 +114,6 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE], union Attri
         // move to the next slot
         slot++;
     }
-    // if no record is found, return {-1, -1}
+    
     return RecId{-1, -1};
 }
