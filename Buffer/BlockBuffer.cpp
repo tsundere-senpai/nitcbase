@@ -1,5 +1,5 @@
 #include "BlockBuffer.h"
-
+#include <iostream>
 #include <cstdlib>
 #include <cstring>
 // the declarations for these functions can be found in "BlockBuffer.h"
@@ -71,6 +71,12 @@ int RecBuffer::getRecord(union Attribute *rec, int slotNum)
 int RecBuffer::setRecord(union Attribute *rec, int slotNum)
 {
 
+    unsigned char *buffer;
+    int ret = loadBlockAndGetBufferPtr(&buffer);
+    if (ret != SUCCESS)
+    {
+        return ret;
+    }
     struct HeadInfo head;
     // get the header using this.getHeader() function
     BlockBuffer::getHeader(&head);
@@ -78,24 +84,28 @@ int RecBuffer::setRecord(union Attribute *rec, int slotNum)
     int attrCount = head.numAttrs;
     int slotCount = head.numSlots;
 
+    if (slotNum >= slotCount)
+        return E_OUTOFBOUND;
+
     // read the block at this.blockNum into a buffer
-    unsigned char *buffer;
-    int ret = loadBlockAndGetBufferPtr(&buffer);
-    if (ret != SUCCESS)
-    {
-        return ret;
-    }
     /* record at slotNum will be at offset HEADER_SIZE + slotMapSize + (recordSize * slotNum)
        - each record will have size attrCount * ATTR_SIZE
        - slotMap will be of size slotCount
     */
+
     int recordSize = attrCount * ATTR_SIZE;
     unsigned char *slotPointer = buffer + (32 + slotCount + (recordSize * slotNum));
-
-    // load the record into the rec data structure
     memcpy(slotPointer, rec, recordSize);
+    
+    int retu = StaticBuffer::setDirtyBit(this->blockNum);
+    if (retu != SUCCESS)
+    {
+        std::cout << "ERROR\n";
+        exit(1);
+    }
+    // load the record into the rec data structure
 
-    Disk::writeBlock(buffer, this->blockNum);
+    // Disk::writeBlock(buffer, this->blockNum);
     return SUCCESS;
 } /*
  Used to load a block to the buffer and get a pointer to it.
@@ -120,14 +130,22 @@ int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char **buffPtr)
     {
         return E_OUTOFBOUND;
     }
-    if (bufferNum == E_BLOCKNOTINBUFFER)
+    if (bufferNum != E_BLOCKNOTINBUFFER)
+    {
+        for (int i = 0; i < BUFFER_CAPACITY; i++)
+        {
+            StaticBuffer::metainfo[i].timeStamp++;
+        }
+        StaticBuffer::metainfo[bufferNum].timeStamp = 0;
+    }
+    else if (bufferNum == E_BLOCKNOTINBUFFER)
     {
         bufferNum = StaticBuffer::getFreeBuffer(this->blockNum);
 
         // if the block is not present in the buffer, read it from the disk
-        if (bufferNum == FAILURE)
+        if (bufferNum == FAILURE || bufferNum==E_OUTOFBOUND)
         {
-            return FAILURE;
+            return bufferNum;
         }
 
         Disk::readBlock(StaticBuffer::blocks[bufferNum], this->blockNum);
@@ -179,15 +197,16 @@ int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType)
     if diff < 0 then return -1
     if diff = 0 then return 0
     */
-    if(attrType == STRING)
+    if (attrType == STRING)
     {
         diff = strcmp(attr1.sVal, attr2.sVal);
     }
     else
-       diff = attr1.nVal - attr2.nVal;
+        diff = attr1.nVal - attr2.nVal;
 
-    if(diff>0) return 1;
-    if(diff<0) return -1;
+    if (diff > 0)
+        return 1;
+    if (diff < 0)
+        return -1;
     return 0;
-    
 }
