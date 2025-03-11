@@ -97,7 +97,7 @@ int OpenRelTable::openRel(char relName[ATTR_SIZE])
     {
         return E_CACHEFULL;
     }
-    
+
     Attribute attrval;
     strcpy(attrval.sVal, relName);
     RelCacheTable::resetSearchIndex(RELCAT_RELID);
@@ -168,17 +168,17 @@ int OpenRelTable::closeRel(int relId)
     }
     if (RelCacheTable::relCache[relId]->dirty)
     {
-  
-      /* Get the Relation Catalog entry from RelCacheTable::relCache
-      Then convert it to a record using RelCacheTable::relCatEntryToRecord(). */
-    Attribute Record[RELCAT_NO_ATTRS];
-    RelCacheTable::relCatEntryToRecord(&(RelCacheTable::relCache[relId]->relCatEntry),Record);
-        RecId recId=RelCacheTable::relCache[relId]->recId;
-      // declaring an object of RecBuffer class to write back to the buffer
-      RecBuffer relCatBlock(recId.block);
-  
-      // Write back to the buffer using relCatBlock.setRecord() with recId.slot
-      relCatBlock.setRecord(Record,recId.slot);
+
+        /* Get the Relation Catalog entry from RelCacheTable::relCache
+        Then convert it to a record using RelCacheTable::relCatEntryToRecord(). */
+        Attribute Record[RELCAT_NO_ATTRS];
+        RelCacheTable::relCatEntryToRecord(&(RelCacheTable::relCache[relId]->relCatEntry), Record);
+        RecId recId = RelCacheTable::relCache[relId]->recId;
+        // declaring an object of RecBuffer class to write back to the buffer
+        RecBuffer relCatBlock(recId.block);
+
+        // Write back to the buffer using relCatBlock.setRecord() with recId.slot
+        relCatBlock.setRecord(Record, recId.slot);
     }
     free(RelCacheTable::relCache[relId]);
     AttrCacheEntry *head = AttrCacheTable::attrCache[relId];
@@ -226,24 +226,53 @@ OpenRelTable::~OpenRelTable()
             OpenRelTable::closeRel(i); // we will implement this function later
         }
     }
-    for (int relId = RELCAT_RELID; relId <= ATTRCAT_RELID; relId++)
+    if (RelCacheTable::relCache[RELCAT_RELID]->dirty)
     {
-        // Free the RelCache entry
-        if (RelCacheTable::relCache[relId] != nullptr)
-        {
-            free(RelCacheTable::relCache[relId]);
-            RelCacheTable::relCache[relId] = nullptr;
-        }
-
-        // Free the linked list of AttrCache entries
-        AttrCacheEntry *current = AttrCacheTable::attrCache[relId];
-        while (current != nullptr)
-        {
-            AttrCacheEntry *next = current->next;
-            free(current);
-            current = next;
-        }
-        AttrCacheTable::attrCache[relId] = nullptr;
+        Attribute relCatRecord[RELCAT_NO_ATTRS];
+        RelCacheTable::relCatEntryToRecord(&(RelCacheTable::relCache[RELCAT_RELID]->relCatEntry), relCatRecord);
+        RecBuffer relCatBlock(RelCacheTable::relCache[RELCAT_RELID]->recId.block);
+        relCatBlock.setRecord(relCatRecord, RelCacheTable::relCache[RELCAT_RELID]->recId.slot);
     }
+
+    free(RelCacheTable::relCache[RELCAT_RELID]);
+
+    if (RelCacheTable::relCache[ATTRCAT_RELID]->dirty)
+    {
+        Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
+        RelCacheTable::relCatEntryToRecord(&(RelCacheTable::relCache[ATTRCAT_RELID]->relCatEntry), attrCatRecord);
+        RecBuffer attrCatBlock(RelCacheTable::relCache[ATTRCAT_RELID]->recId.block);
+        attrCatBlock.setRecord(attrCatRecord, RelCacheTable::relCache[ATTRCAT_RELID]->recId.slot);
+    }
+    free(RelCacheTable::relCache[ATTRCAT_RELID]);
+
+    for (int relId = ATTRCAT_RELID; relId >= RELCAT_RELID; relId--)
+	{
+		AttrCacheEntry *curr = AttrCacheTable::attrCache[relId], *next = nullptr;
+		for (int attrIndex = 0; attrIndex < 6; attrIndex++)
+		{
+			next = curr->next;
+
+			// check if the AttrCatEntry was written back
+			if (curr->dirty)
+			{
+				AttrCatEntry attrCatBuffer;
+				AttrCacheTable::getAttrCatEntry(relId, attrIndex, &attrCatBuffer);
+
+				Attribute attrCatRecord [ATTRCAT_NO_ATTRS];
+				AttrCacheTable::attrCatEntryToRecord(&attrCatBuffer, attrCatRecord);
+
+				RecId recId = curr->recId;
+
+				// declaring an object if RecBuffer class to write back to the buffer
+				RecBuffer attrCatBlock (recId.block);
+
+				// write back to the buffer using RecBufer.setRecord()
+				attrCatBlock.setRecord(attrCatRecord, recId.slot);
+			}
+
+			free (curr);
+			curr = next;
+		}
+	}
     // free all the memory that you allocated in the constructor
 }

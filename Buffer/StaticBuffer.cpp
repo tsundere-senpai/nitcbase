@@ -38,8 +38,8 @@ StaticBuffer::~StaticBuffer()
         for(int slot=0;slot<BLOCK_SIZE;slot++,bmap_slot++){
             buffer[slot]=StaticBuffer::blockAllocMap[bmap_slot];
 
-            Disk::writeBlock(buffer,block_index);   
         }
+        Disk::writeBlock(buffer,block_index);   
 
 
     }
