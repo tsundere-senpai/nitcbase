@@ -82,17 +82,22 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
         return ret;
     }
     RelCacheTable::resetSearchIndex(srcRelId);
+    AttrCacheTable::resetSearchIndex(srcRelId,attr);
+
     Attribute record[srcNattrs];
     while (BlockAccess::search(srcRelId, record, attr, attrVal, op) == SUCCESS)
     {
+        //printf("search was succesful\n");
         ret = BlockAccess::insert(targetRelId, record);
         if (ret != SUCCESS)
         {
+            //  printf("insert isnt happening\n");
             Schema::closeRel(targetRel);
             Schema::deleteRel(targetRel);
             return ret;
         }
     }
+    printf("%d\n",BPlusTree::getCompCount());
     Schema::closeRel(targetRel);
     return SUCCESS;
 }
@@ -183,6 +188,7 @@ int Algebra::project(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE])
         return targetRelId;
     }
     Attribute record[srcNoAttrs];
+    RelCacheTable::resetSearchIndex(srcRelId);
     while (BlockAccess::project(srcRelId, record) == SUCCESS)
     {
         ret = BlockAccess::insert(targetRelId, record);

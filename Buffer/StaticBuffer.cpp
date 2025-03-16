@@ -6,19 +6,18 @@ unsigned char StaticBuffer::blockAllocMap[DISK_BLOCKS];
 
 StaticBuffer::StaticBuffer()
 {
-    
-        for (int block_index= 0,bmap_slot=0; block_index < 4; block_index++)
-        {
-            unsigned char buffer[BLOCK_SIZE];
-            Disk::readBlock(buffer,block_index);
 
-            for(int slot=0;slot<BLOCK_SIZE;slot++,bmap_slot++){
-                StaticBuffer::blockAllocMap[bmap_slot]=buffer[slot];
-            }
-            
+    for (int block_index = 0, bmap_slot = 0; block_index < 4; block_index++)
+    {
+        unsigned char buffer[BLOCK_SIZE];
+        Disk::readBlock(buffer, block_index);
+
+        for (int slot = 0; slot < BLOCK_SIZE; slot++, bmap_slot++)
+        {
+            StaticBuffer::blockAllocMap[bmap_slot] = buffer[slot];
         }
-        
-    
+    }
+
     for (int i = 0; i < BUFFER_CAPACITY; i++)
     {
         metainfo[i].free = true;
@@ -31,19 +30,17 @@ StaticBuffer::StaticBuffer()
 StaticBuffer::~StaticBuffer()
 {
     // do nothing
-    for (int block_index = 0,bmap_slot=0; block_index < 4; block_index++)
+    for (int block_index = 0, bmap_slot = 0; block_index < 4; block_index++)
     {
         unsigned char buffer[BLOCK_SIZE];
 
-        for(int slot=0;slot<BLOCK_SIZE;slot++,bmap_slot++){
-            buffer[slot]=StaticBuffer::blockAllocMap[bmap_slot];
-
+        for (int slot = 0; slot < BLOCK_SIZE; slot++, bmap_slot++)
+        {
+            buffer[slot] = StaticBuffer::blockAllocMap[bmap_slot];
         }
-        Disk::writeBlock(buffer,block_index);   
-
-
+        Disk::writeBlock(buffer, block_index);
     }
-    
+
     for (int i = 0; i < BUFFER_CAPACITY; i++)
     {
         if (metainfo[i].dirty && !metainfo[i].free)
@@ -127,4 +124,17 @@ int StaticBuffer::getBufferNum(int blockNum)
         }
     }
     return E_BLOCKNOTINBUFFER;
+}
+int StaticBuffer::getStaticBlockType(int blockNum)
+{
+    // Check if blockNum is valid (non zero and less than number of disk blocks)
+    // and return E_OUTOFBOUND if not valid.
+    if (blockNum < 0 || blockNum > DISK_BLOCKS)
+    {
+        return E_OUTOFBOUND;
+    }
+
+    // Access the entry in block allocation map corresponding to the blockNum argument
+    // and return the block type after type casting to integer.
+    return (int)blockAllocMap[blockNum];
 }

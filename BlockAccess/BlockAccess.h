@@ -23,6 +23,7 @@ class BlockAccess {
   static RecId linearSearch(int relId, char *attrName, Attribute attrVal, int op);
 
   static int project(int relId, Attribute *record);
+  static int getCompCount();
 };
 
 #endif  // NITCBASE_BLOCKACCESS_H
