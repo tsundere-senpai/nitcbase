@@ -181,17 +181,42 @@ int OpenRelTable::closeRel(int relId)
         relCatBlock.setRecord(Record, recId.slot);
     }
     free(RelCacheTable::relCache[relId]);
-    AttrCacheEntry *head = AttrCacheTable::attrCache[relId];
-    AttrCacheEntry *next = head->next;
-    while (next != nullptr)
+    // AttrCacheEntry *head = AttrCacheTable::attrCache[relId];
+    // AttrCacheEntry *next = head->next;
+    // while (next != nullptr)
+    // {
+    //     free(head);
+    //     head = next;
+    //     next = next->next;
+    // }
+    // free(head);
+    // // update `tableMetaInfo` to set `relId` as a free slot
+    // // update `relCache` and `attrCache` to set the entry at `relId` to nullptr
+
+    /****** Releasing the Attribute Cache entry of the relation ******/
+
+    // for all the entries in the linked list of the relIdth Attribute Cache entry.
+    for (AttrCacheEntry *entry = AttrCacheTable::attrCache[relId]; entry != nullptr;)
     {
-        free(head);
-        head = next;
-        next = next->next;
+        if (entry->dirty)
+        {
+            /* Get the Attribute Catalog entry from attrCache
+            Then convert it to a record using AttrCacheTable::attrCatEntryToRecord().
+            Write back that entry by instantiating RecBuffer class. Use recId
+            member field and recBuffer.setRecord() */
+            Attribute attrRec[ATTRCAT_NO_ATTRS];
+            AttrCacheTable::attrCatEntryToRecord(&(entry->attrCatEntry), attrRec);
+            RecBuffer recBlock(entry->recId.block);
+            recBlock.setRecord(attrRec, entry->recId.slot);
+        }
+
+        // free the memory dynamically alloted to this entry in Attribute
+        // Cache linked list and assign nullptr to that entry
+        AttrCacheEntry *nextEntry = entry->next;
+        free(entry);
+        entry = nextEntry;
     }
-    free(head);
-    // update `tableMetaInfo` to set `relId` as a free slot
-    // update `relCache` and `attrCache` to set the entry at `relId` to nullptr
+    
     tableMetaInfo[relId].free = true;
     RelCacheTable::relCache[relId] = nullptr;
     AttrCacheTable::attrCache[relId] = nullptr;
@@ -246,33 +271,33 @@ OpenRelTable::~OpenRelTable()
     free(RelCacheTable::relCache[ATTRCAT_RELID]);
 
     for (int relId = ATTRCAT_RELID; relId >= RELCAT_RELID; relId--)
-	{
-		AttrCacheEntry *curr = AttrCacheTable::attrCache[relId], *next = nullptr;
-		for (int attrIndex = 0; attrIndex < 6; attrIndex++)
-		{
-			next = curr->next;
+    {
+        AttrCacheEntry *curr = AttrCacheTable::attrCache[relId], *next = nullptr;
+        for (int attrIndex = 0; attrIndex < 6; attrIndex++)
+        {
+            next = curr->next;
 
-			// check if the AttrCatEntry was written back
-			if (curr->dirty)
-			{
-				AttrCatEntry attrCatBuffer;
-				AttrCacheTable::getAttrCatEntry(relId, attrIndex, &attrCatBuffer);
+            // check if the AttrCatEntry was written back
+            if (curr->dirty)
+            {
+                AttrCatEntry attrCatBuffer;
+                AttrCacheTable::getAttrCatEntry(relId, attrIndex, &attrCatBuffer);
 
-				Attribute attrCatRecord [ATTRCAT_NO_ATTRS];
-				AttrCacheTable::attrCatEntryToRecord(&attrCatBuffer, attrCatRecord);
+                Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
+                AttrCacheTable::attrCatEntryToRecord(&attrCatBuffer, attrCatRecord);
 
-				RecId recId = curr->recId;
+                RecId recId = curr->recId;
 
-				// declaring an object if RecBuffer class to write back to the buffer
-				RecBuffer attrCatBlock (recId.block);
+                // declaring an object if RecBuffer class to write back to the buffer
+                RecBuffer attrCatBlock(recId.block);
 
-				// write back to the buffer using RecBufer.setRecord()
-				attrCatBlock.setRecord(attrCatRecord, recId.slot);
-			}
+                // write back to the buffer using RecBufer.setRecord()
+                attrCatBlock.setRecord(attrCatRecord, recId.slot);
+            }
 
-			free (curr);
-			curr = next;
-		}
-	}
+            free(curr);
+            curr = next;
+        }
+    }
     // free all the memory that you allocated in the constructor
 }

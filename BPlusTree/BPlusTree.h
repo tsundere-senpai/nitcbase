@@ -9,12 +9,12 @@
 
 class BPlusTree {
  private:
-  static int findLeafToInsert(int rootBlock, Attribute attrVal, int attrType);
-  static int insertIntoLeaf(int relId, char attrName[ATTR_SIZE], int blockNum, Index entry);
-  static int splitLeaf(int leafBlockNum, Index indices[]);
-  static int insertIntoInternal(int relId, char attrName[ATTR_SIZE], int intBlockNum, InternalEntry entry);
-  static int splitInternal(int intBlockNum, InternalEntry internalEntries[]);
-  static int createNewRoot(int relId, char attrName[ATTR_SIZE], Attribute attrVal, int lChild, int rChild);
+     static int findLeafToInsert(int rootBlock, Attribute attrVal, int attrType);
+     static int insertIntoLeaf(int relId, char attrName[ATTR_SIZE], int blockNum, Index entry);
+     static int splitLeaf(int leafBlockNum, Index indices[]);
+     static int insertIntoInternal(int relId, char attrName[ATTR_SIZE], int intBlockNum, InternalEntry entry);
+     static int splitInternal(int intBlockNum, InternalEntry internalEntries[]);
+     static int createNewRoot(int relId, char attrName[ATTR_SIZE], Attribute attrVal, int lChild, int rChild);
 
  public:
   static int bPlusCreate(int relId, char attrName[ATTR_SIZE]);

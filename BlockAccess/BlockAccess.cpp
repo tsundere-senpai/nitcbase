@@ -503,8 +503,38 @@ int BlockAccess::insert(int relId, Attribute *record)
     // the relation. (use RelCacheTable::setRelCatEntry function)
     relCatEntry.numRecs++;
     RelCacheTable::setRelCatEntry(relId, &relCatEntry);
+        
+        /*B+ tree insertions*/
+    
+    int flag = SUCCESS;
+    // Iterate over all the attributes of the relation
+    // (let attrOffset be iterator ranging from 0 to numOfAttributes-1)
+    for(int attrOffset=0;attrOffset<numOfAttributes;attrOffset++)
+    {
+        // get the attribute catalog entry for the attribute from the attribute cache
+        // (use AttrCacheTable::getAttrCatEntry() with args relId and attrOffset)
+        AttrCatEntry attrCatEntry;
+        AttrCacheTable::getAttrCatEntry(relId,attrOffset,&attrCatEntry);
 
-    return SUCCESS;
+        // get the root block field from the attribute catalog entry
+        int rootBlock=attrCatEntry.rootBlock;
+        // if index exists for the attribute(i.e. rootBlock != -1)
+        if(rootBlock!=-1)
+        {
+            /* insert the new record into the attribute's bplus tree using
+             BPlusTree::bPlusInsert()*/
+            int retVal = BPlusTree::bPlusInsert(relId, attrCatEntry.attrName,
+                                                record[attrOffset], rec_id);
+
+            if (retVal == E_DISKFULL) {
+                //(index for this attribute has been destroyed)
+                // flag = E_INDEX_BLOCKS_RELEASED
+                flag=E_INDEX_BLOCKS_RELEASED;
+            }
+        }
+    }
+
+    return flag;
 }
 /*
 NOTE: This function will copy the result of the search to the `record` argument.
@@ -645,7 +675,7 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE])
 
         // declare variable rootBlock which will be used to store the root
         // block field from the attribute catalog record.
-        // int rootBlock = attrCatRec[ATTRCAT_ROOT_BLOCK_INDEX].nVal;
+        int rootBlock = attrCatRec[ATTRCAT_ROOT_BLOCK_INDEX].nVal;
         // (This will be used later to delete any indexes if it exists)
 
         // Update the Slotmap for the block by setting the slot as SLOT_UNOCCUPIED
@@ -722,6 +752,11 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE])
                 // delete the bplus tree rooted at rootBlock using BPlusTree::bPlusDestroy()
             }
                 */
+            if (rootBlock!=-1)
+            {
+                 BPlusTree::bPlusDestroy(rootBlock);
+            }
+            
     }
 
     /*** Delete the entry corresponding to the relation from relation catalog ***/

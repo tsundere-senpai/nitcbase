@@ -97,7 +97,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
             return ret;
         }
     }
-    printf("%d\n",BPlusTree::getCompCount());
+   // printf("%d\n",BPlusTree::getCompCount());
     Schema::closeRel(targetRel);
     return SUCCESS;
 }
