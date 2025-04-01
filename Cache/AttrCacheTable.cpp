@@ -1,5 +1,5 @@
 #include "AttrCacheTable.h"
-
+#include <stdio.h>
 #include <cstring>
 AttrCacheEntry *AttrCacheTable::attrCache[MAX_OPEN];
 
@@ -60,6 +60,7 @@ int AttrCacheTable::getAttrCatEntry(int relId, char attrName[ATTR_SIZE], AttrCat
   //    matches attrName
   for (AttrCacheEntry *entry = attrCache[relId]; entry != nullptr; entry = entry->next)
   {
+  //  printf("attrcatentry %s\nparameter %s\n",entry->attrCatEntry.attrName,attrName);
     if (strcmp(entry->attrCatEntry.attrName, attrName) == 0)
     {
       strcpy(attrCatBuf->relName, entry->attrCatEntry.relName);
@@ -69,6 +70,7 @@ int AttrCacheTable::getAttrCatEntry(int relId, char attrName[ATTR_SIZE], AttrCat
       attrCatBuf->primaryFlag = entry->attrCatEntry.primaryFlag;
       attrCatBuf->rootBlock = entry->attrCatEntry.rootBlock;
       attrCatBuf->offset = entry->attrCatEntry.offset;
+      //printf("SUCCESS\n");
       return SUCCESS;
     }
   }

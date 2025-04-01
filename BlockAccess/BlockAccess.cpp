@@ -1,11 +1,11 @@
 #include "BlockAccess.h"
 #include <stdio.h>
 #include <cstring>
-static int compCount = 0;
-int BlockAccess::getCompCount()
-{
-    return compCount;
-}
+// static int compCount = 0;
+// int BlockAccess::getCompCount()
+// {
+//     return compCount;
+// }
 RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE], union Attribute attrVal, int op)
 {
     // get the search index for the relation
@@ -100,7 +100,7 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE], union Attri
         // printf("name=%s\n recordname=%s\n",record[attrOffset].sVal,attrVal.sVal);
 
         int cmpVal = compareAttrs(record[attrOffset] /*a*/, attrVal /*b*/, attrCatEntry.attrType);
-        compCount++;
+       // compCount++;
         // printf("value=%d\n",cmpVal);
         if (
             (op == NE && cmpVal != 0) ||
@@ -267,6 +267,7 @@ int BlockAccess::project(int relId, Attribute *record)
     RecId prevRecId;
     RelCacheTable::getSearchIndex(relId, &prevRecId);
 
+
     /* if the current search index record is invalid(i.e. = {-1, -1})
        (this only happens when the caller reset the search index)
     */
@@ -282,6 +283,7 @@ int BlockAccess::project(int relId, Attribute *record)
         slot = 0;
         // block = first record block of the relation
         // slot = 0
+        //printf("Block %d\nSlot %d\n",block,slot);
     }
     else
     {
@@ -290,6 +292,7 @@ int BlockAccess::project(int relId, Attribute *record)
         slot = prevRecId.slot + 1;
         // block = previous search index's block
         // slot = previous search index's slot + 1
+      //  printf("Block %d\nSlot %d\n",block,slot);
     }
 
     // The following code finds the next record of the relation
@@ -313,6 +316,7 @@ int BlockAccess::project(int relId, Attribute *record)
             //        set block = -1 and fail the loop condition )
             block = header.rblock;
             slot = 0;
+           // printf("Block %d\nSlot %d\n",block,slot);
         }
         else if (slotMap[slot] == SLOT_UNOCCUPIED)
         { // (i.e slot-th entry in slotMap contains SLOT_UNOCCUPIED)
